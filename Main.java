@@ -112,30 +112,22 @@ public class Main {
 
     // метод с усложненной многопоточной версией программы
     public static void complicatedThreads() {
-        // создаем объект задания
         Task task = new Task();
-
-        // устанавливаем количество выполняемых заданий 
         task.setTasksCount(100);
 
-        // создаем семафор
-        Semaphore semaphore = new Semaphore(0);
+        Semaphore semaphore = new Semaphore(1);
 
-        // создаем потоки
         Generator generator = new Generator(task, semaphore);
         Integrator integrator = new Integrator(task, semaphore);
 
-        // запускаем потоки
         generator.start();
         integrator.start();
 
-        // ждем 50 миллисекунд
         try {
             Thread.sleep(50);
         } catch (InterruptedException e) {
         }
 
-        // прерываем потоки
         generator.interrupt();
         integrator.interrupt();
     }

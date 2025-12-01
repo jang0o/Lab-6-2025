@@ -22,27 +22,32 @@ public class Generator extends Thread {
                     return;
                 }
 
-                // создаем объект логарифмической функции со случайным основанием от 1 до 10
+
                 double base = 1 + random.nextDouble() * 9;
                 Log logFunction = new Log(base);
-                task.setFunction(logFunction);
-
-                // левая граница области интегрирования (от 0 до 100)
                 double leftBorder = random.nextDouble() * 100;
-                task.setLeftBorder(leftBorder);
 
-                // правая граница области интегрирования (от 100 до 200)
-                double rightBorder = 100 + random.nextDouble() * 100;
-                task.setRightBorder(rightBorder);
+                double rightBorder;
+                do {
+                    rightBorder = 100 + random.nextDouble() * 100;
+                } while (rightBorder <= leftBorder);
 
-                // шаг дискретизации (от 0 до 1)
                 double step = random.nextDouble();
+
+                // используем семафор для синхронизации записи
+                semaphore.acquire();
+
+                task.setFunction(logFunction);
+                task.setLeftBorder(leftBorder);
+                task.setRightBorder(rightBorder);
                 task.setStep(step);
 
                 System.out.printf("Source %.4f %.4f %.4f\n",
-                        task.getLeftBorder(), task.getRightBorder(), task.getStep());
+                        leftBorder, rightBorder, step);
 
-            } catch (Exception e) {
+                semaphore.release();
+
+            } catch (InterruptedException e) {
                 return;
             }
         }

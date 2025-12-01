@@ -19,14 +19,29 @@ public class Integrator extends Thread {
                     return;
                 }
 
-                // вычисляем значение интеграла для параметров из объекта задания
+                // используем семафор для синхронизации чтения
+                semaphore.acquire();
+
+                // дополнительная проверка границ
+                double left = task.getLeftBorder();
+                double right = task.getRightBorder();
+                double step = task.getStep();
+
+                if (left >= right) {
+                    System.out.printf("Ошибка: некорректные границы %.4f >= %.4f\n", left, right);
+                    semaphore.release();
+                    continue;
+                }
+
                 double result = Functions.integrate(task.getFunction(),
-                        task.getLeftBorder(), task.getRightBorder(), task.getStep());
+                        left, right, step);
 
                 System.out.printf("Result %.4f %.4f %.4f %.4f\n",
-                        task.getLeftBorder(), task.getRightBorder(), task.getStep(), result);
+                        left, right, step, result);
 
-            } catch (Exception e) {
+                semaphore.release();
+
+            } catch (InterruptedException e) {
                 return;
             }
         }
