@@ -5,11 +5,13 @@ import java.util.concurrent.Semaphore;
 
 public class Integrator extends Thread {
     private Task task;
-    private Semaphore semaphore;
+    private Semaphore generatorSemaphore;
+    private Semaphore integratorSemaphore;
 
-    public Integrator(Task task, Semaphore semaphore) {
+    public Integrator(Task task, Semaphore generatorSemaphore, Semaphore integratorSemaphore) {
         this.task = task;
-        this.semaphore = semaphore;
+        this.generatorSemaphore = generatorSemaphore;
+        this.integratorSemaphore = integratorSemaphore;
     }
 
     public void run() {
@@ -19,27 +21,23 @@ public class Integrator extends Thread {
                     return;
                 }
 
-                // используем семафор для синхронизации чтения
-                semaphore.acquire();
+                // ждем разрешения на интегрирование
+                integratorSemaphore.acquire();
 
-                // дополнительная проверка границ
+                // читаем данные
                 double left = task.getLeftBorder();
                 double right = task.getRightBorder();
                 double step = task.getStep();
 
-                if (left >= right) {
-                    System.out.printf("Ошибка: некорректные границы %.4f >= %.4f\n", left, right);
-                    semaphore.release();
-                    continue;
-                }
-
+                // вычисляем интеграл
                 double result = Functions.integrate(task.getFunction(),
                         left, right, step);
 
                 System.out.printf("Result %.4f %.4f %.4f %.4f\n",
                         left, right, step, result);
 
-                semaphore.release();
+                // разрешаем генератору работать над следующим заданием
+                generatorSemaphore.release();
 
             } catch (InterruptedException e) {
                 return;
